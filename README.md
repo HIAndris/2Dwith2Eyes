@@ -4,14 +4,14 @@
 * **Author:** [István András Hegedűs](https://github.com/HIAndris)
 * **Contributors:**
  - Dávid Laczkó
- - Csongor Botond Vincze
+ - [Csongor Botond Vincze](https://github.com/Slampis1)
 * **Mentor:** [István Hegedűs](https://github.com/istvan-hegedus)
 * **License:** Apache 2.0
 * **Competition:** [World Robot Olympiad (WRO) – Hungary](https://wro.hu/) – Future Engineers category, 2025
 
 ## 📌 Description
 
-**3D2E** refers to __3 Dimensions with 2 Eyes__ and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
+**3D2E** refers to **3 Dimensions with 2 Eyes** and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
 
 The goal of the project is to create a system that:
 
