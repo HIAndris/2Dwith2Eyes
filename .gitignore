@@ -1,0 +1,18 @@
+
+# PlatformIO
+.pio/
+.vscode/
+*.elf
+*.bin
+*.map
+*.pyc
+__pycache__/
+
+# CLion
+.idea/
+cmake-build-*/
+*.iml
+
+# OS-specific
+.DS_Store
+Thumbs.db
