@@ -1,11 +1,13 @@
 # 2Dwith2Eyes – WRO Future Engineers 2025
 
-**Project Name:** 2Dwith2Eyes
-**Author:** István András Hegedűs
-**Contributors:** Dávid Laczkó, Csongor Botond Vincze
-**Mentor:** István Hegedűs
-**License:** Apache 2.0
-**Competition:** [World Robot Olympiad (WRO) – Hungary](https://wro.hu/) – Future Engineers category, 2025
+* **Project Name:** 2Dwith2Eyes
+* **Author:** [István András Hegedűs](https://github.com/HIAndris)
+* **Contributors:**
+ - Dávid Laczkó
+ - Csongor Botond Vincze
+* **Mentor:** [István Hegedűs](https://github.com/istvan-hegedus)
+* **License:** Apache 2.0
+* **Competition:** [World Robot Olympiad (WRO) – Hungary](https://wro.hu/) – Future Engineers category, 2025
 
 ## 📌 Description
 
