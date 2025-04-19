@@ -11,7 +11,7 @@
 
 ## 📌 Description
 
-**3D2E** refers to __2 Dimensions with 2 Eyes__ and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
+**3D2E** refers to 3 Dimensions with 2 Eyes and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
 
 The goal of the project is to create a system that:
 
