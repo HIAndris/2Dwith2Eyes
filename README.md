@@ -1,6 +1,6 @@
-# 3D2E – WRO Future Engineers 2025
+# 2D2E – WRO Future Engineers 2025
 
-* **Project Name:** 3D2E
+* **Project Name:** 2D2E
 * **Author:** [István András Hegedűs](https://github.com/HIAndris)
 * **Contributors:** Dávid Laczkó, [Csongor Botond Vincze](https://github.com/Slampis1)
 * **Mentor:** [István Hegedűs](https://github.com/istvan-hegedus)
@@ -9,13 +9,14 @@
 
 ## 📌 Description
 
-**3D2E** refers to **3 Dimensions with 2 Eyes** and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
+**2D2E** refers to **2 Dimensions with 2 Eyes** and is an open-source educational project developed for the **World Robot Olympiad 2025 – Future Engineers** category.
+The name comes from our goal of two 1 dimensional camera feeds that create a 2 dimensional perception.
 
 The goal of the project is to create a system that:
 
 - Uses two camera modules (OV7670)
 - Maps a horizontal slice of 3D space in real time
-- Effectively simulates **2D perception with two eyes** in a 3D environment
+- Effectively simulates **depth perception with two eyes** in a 3D environment
 
 Potential applications include:
 - Obstacle detection
