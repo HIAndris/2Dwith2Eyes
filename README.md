@@ -2,7 +2,7 @@
 
 * **Project Name:** 2D2E
 * **Author:** [István András Hegedűs](https://github.com/HIAndris)
-* **Contributors:** Dávid Laczkó, [Csongor Botond Vincze](https://github.com/Slampis1)
+* **Contributors:** [Dávid Laczkó]([https://](https://github.com/Zsep1), [Csongor Botond Vincze](https://github.com/Slampis1)
 * **Mentor:** [István Hegedűs](https://github.com/istvan-hegedus)
 * **License:** [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 * **Competition:** [World Robot Olympiad (WRO) – Hungary](https://wro.hu/) – [Future Engineers category, 2025](https://wro.hu/future-engineers-kategoria/)
