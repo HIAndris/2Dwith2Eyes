@@ -10,6 +10,8 @@
 
 #include "driver/i2c_master.h"
 
+//#include "vl53l0x/vl53l0x.h"
+
 #define TAG "2Dwith2Eyes"
 
 #define CAM1_PIN_PWDN 3
@@ -18,8 +20,8 @@
 #define GPIO_CAM2_PWDN GPIO_NUM_8
 #define CAM_PIN_RESET (-1)
 #define CAM_PIN_XCLK 14
-#define CAM_PIN_SIOD 10
-#define CAM_PIN_SIOC 9
+#define COMMON_PIN_SIOD 10
+#define COMMON_PIN_SIOC 9
 
 #define CAM_PIN_D0 18
 #define CAM_PIN_D1 17
@@ -35,85 +37,50 @@
 
 #define GYRO_CHANNEL 0x68
 
-#define DIST1_SHUT 19
-#define DIST2_SHUT 20
-#define DIST3_SHUT 21
-#define DIST_SCL 47
-#define DIST_SDA 48
+#define DIST1_SHUT_PIN 19
+#define DIST2_SHUT_PIN 20
+#define DIST3_SHUT_PIN 21
 
-#define GYRO_SCL 1
-#define GYRO_SDA 2
+#define MOTOR1_D0_PIN 1
+#define MOTOR1_D1_PIN 2
+#define MOTOR1_D2_PIN 42
+#define MOTOR1_D3_PIN 41
 
-#define MOTOR1_D0 39
-#define MOTOR1_D1 40
-#define MOTOR2_D0 41
-#define MOTOR2_D1 42
+#define MOTOR2_D0_PIN 40
+#define MOTOR2_D1_PIN 39
+#define MOTOR2_D2_PIN 47
+#define MOTOR2_D3_PIN 46
 
 #define RGB_LED 48
 
-#define START_TOUCH 38
-#define MODE_SELECT 47
+#define TOUCH_PIN 38
 
 // Global variables that is written by CPU Core #0 and read by CPU Core #1
 uint16_t camera_1_row[320] = {};
 uint16_t camera_2_row[320] = {};
 
-
-/*
-#include "conversions/include/img_converters.h"
-
-static constexpr char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-static constexpr int mod_table[] = {0, 2, 1};
-
-char* base64_encode(const uint8_t *data, size_t input_length, size_t *output_length) {
-    *output_length = 4 * ((input_length + 2) / 3);
-    const auto encoded_data = static_cast<char*>(malloc(*output_length + 1));
-    if (encoded_data == nullptr) {
-        return nullptr;
-    }
-    for (size_t i = 0, j = 0; i < input_length;) {
-        const uint32_t octet_a = i < input_length ? data[i++] : 0;
-        const uint32_t octet_b = i < input_length ? data[i++] : 0;
-        const uint32_t octet_c = i < input_length ? data[i++] : 0;
-        const uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
-        encoded_data[j++] = base64_chars[(triple >> 3 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 2 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 1 * 6) & 0x3F];
-        encoded_data[j++] = base64_chars[(triple >> 0 * 6) & 0x3F];
-    }
-    for (size_t i = 0; i < mod_table[input_length % 3]; i++)
-        encoded_data[*output_length - 1 - i] = '=';
-    encoded_data[*output_length] = '\0';
-    return encoded_data;
-}
-
-void convertImageAndWriteToLogInBase64(camera_fb_t* pic) {
-    uint8_t* jpg_buffer;
-    size_t jpg_size;
-    // Convert to JPEG
-    if (!frame2jpg(pic, 80, &jpg_buffer, &jpg_size)) {
-        ESP_LOGI(TAG, "The convert failed");
-    }
-    // Baee64 conversion and log writing
-    size_t b64_len;
-    char* base64_img = base64_encode(jpg_buffer, jpg_size, &b64_len);
-    ESP_LOGI("OV7670-1", "%s", base64_img);
-    free(base64_img);
-    // Free up JPEG memory buffer
-    heap_caps_free(jpg_buffer);
-}*/
-
 typedef enum {
+    CAMERA1 = GPIO_CAM1_PWDN,
+    CAMERA2 = GPIO_CAM2_PWDN,
+    DISTANCE1 = DIST1_SHUT_PIN,
+    DISTANCE2 = DIST2_SHUT_PIN,
+    DISTANCE3 = DIST3_SHUT_PIN
+} serial_io_devices_t;
+
+constexpr serial_io_devices_t DEVICES[] = {
     CAMERA1,
-    CAMERA2
-} camera_t;
+    CAMERA2,
+    //DISTANCE1,
+    //DISTANCE2,
+    //DISTANCE3
+};
 
 static camera_config_t camera1_config = {
     .pin_pwdn = CAM1_PIN_PWDN,
     .pin_reset = CAM_PIN_RESET,
     .pin_xclk = CAM_PIN_XCLK,
-    .pin_sccb_sda = CAM_PIN_SIOD,
-    .pin_sccb_scl = CAM_PIN_SIOC,
+    .pin_sccb_sda = COMMON_PIN_SIOD,
+    .pin_sccb_scl = COMMON_PIN_SIOC,
     .pin_d7 = CAM_PIN_D7,
     .pin_d6 = CAM_PIN_D6,
     .pin_d5 = CAM_PIN_D5,
@@ -132,7 +99,7 @@ static camera_config_t camera1_config = {
     .frame_size = FRAMESIZE_QVGA,
     .jpeg_quality = 12,
     .fb_count = 1,
-    .fb_location = CAMERA_FB_IN_PSRAM,
+    .fb_location = CAMERA_FB_IN_DRAM,
     .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
     .sccb_i2c_port = -1
 };
@@ -141,8 +108,8 @@ static camera_config_t camera2_config = {
     .pin_pwdn = CAM2_PIN_PWDN,
     .pin_reset = CAM_PIN_RESET,
     .pin_xclk = CAM_PIN_XCLK,
-    .pin_sccb_sda = CAM_PIN_SIOD,
-    .pin_sccb_scl = CAM_PIN_SIOC,
+    .pin_sccb_sda = COMMON_PIN_SIOD,
+    .pin_sccb_scl = COMMON_PIN_SIOC,
     .pin_d7 = CAM_PIN_D7,
     .pin_d6 = CAM_PIN_D6,
     .pin_d5 = CAM_PIN_D5,
@@ -161,17 +128,34 @@ static camera_config_t camera2_config = {
     .frame_size = FRAMESIZE_QVGA,
     .jpeg_quality = 12,
     .fb_count = 1,
-    .fb_location = CAMERA_FB_IN_PSRAM,
+    .fb_location = CAMERA_FB_IN_DRAM,
     .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
     .sccb_i2c_port = -1
 };
 
+static void disable_others(const serial_io_devices_t selector) {
+    for (const serial_io_devices_t device : DEVICES) {
+        if (device != selector) {
+            ESP_LOGE(TAG, "Disable device %d", device);
+            gpio_set_direction(static_cast<gpio_num_t>(selector), GPIO_MODE_OUTPUT);
+            gpio_set_pull_mode(static_cast<gpio_num_t>(selector), GPIO_FLOATING);
+            gpio_set_level(static_cast<gpio_num_t>(selector), 1);
+        }
+    }
+}
 
-static esp_err_t init_camera(const camera_t selector) {
-    gpio_reset_pin(selector == CAMERA1 ? GPIO_CAM1_PWDN : GPIO_CAM2_PWDN);
-    gpio_set_direction(selector == CAMERA1 ? GPIO_CAM2_PWDN : GPIO_CAM1_PWDN, GPIO_MODE_OUTPUT);
-    gpio_set_pull_mode(selector == CAMERA1 ? GPIO_CAM2_PWDN : GPIO_CAM1_PWDN, GPIO_FLOATING);
-    gpio_set_level(selector == CAMERA1 ? GPIO_CAM2_PWDN : GPIO_CAM1_PWDN, 1);
+static void activate_device(const serial_io_devices_t selector) {
+    disable_others(selector);
+    ESP_LOGE(TAG, "Enable device %d", selector);
+    gpio_set_direction(static_cast<gpio_num_t>(selector), GPIO_MODE_OUTPUT);
+    gpio_set_pull_mode(static_cast<gpio_num_t>(selector), GPIO_FLOATING);
+    gpio_set_level(static_cast<gpio_num_t>(selector), 0);
+}
+
+static esp_err_t init_camera(const serial_io_devices_t selector) {
+    disable_others(selector);
+    ESP_LOGE(TAG, "Initialize camera device %d", selector);
+    gpio_reset_pin(static_cast<gpio_num_t>(selector));
     if (const esp_err_t err = esp_camera_init(selector == CAMERA1 ? &camera1_config : &camera2_config); err != ESP_OK) {
         ESP_LOGE(TAG, "Camera Init Failed");
         return err;
@@ -213,17 +197,23 @@ void update_camera_row(const camera_fb_t* pic, uint16_t row_buffer[]) {
     }
 }
 
-void core0_main(void * parameter) {
-    esp_log_level_set("*", ESP_LOG_INFO);
-    ESP_LOGI(TAG, "Starting");
+void core1_main(void * parameter) {
+    ESP_LOGI(TAG, "Starting Core #%d worker...", xPortGetCoreID());
 
     while (true) {
         ESP_LOGI(TAG, "Init CAMERA #1 and take picture...");
+
+        gpio_set_direction(GPIO_CAM2_PWDN, GPIO_MODE_OUTPUT);
+        //gpio_set_pull_mode(GPIO_CAM2_PWDN, GPIO_FLOATING);
+        gpio_set_level(GPIO_CAM2_PWDN, 1);
+
         if (ESP_OK != init_camera(CAMERA1)) {
             return;
         }
         // Get picture from CAMERA1
         camera_fb_t* pic = esp_camera_fb_get();
+
+        ESP_LOGI(TAG, "Picture taken from CAMERA #1");
 
         // 320*240*2 bytes; we average pixels horizontally
         update_camera_row(pic, camera_1_row);
@@ -236,6 +226,11 @@ void core0_main(void * parameter) {
         }
 
         ESP_LOGI(TAG, "Init CAMERA #2 and take picture...");
+
+        gpio_set_direction(GPIO_CAM1_PWDN, GPIO_MODE_OUTPUT);
+        //gpio_set_pull_mode(GPIO_CAM1_PWDN, GPIO_FLOATING);
+        gpio_set_level(GPIO_CAM1_PWDN, 1);
+
         if (ESP_OK != init_camera(CAMERA2)) {
             return;
         }
@@ -245,12 +240,38 @@ void core0_main(void * parameter) {
         // 320*240*2 bytes; we average pixels horizontally
         update_camera_row(pic, camera_2_row);
 
+        ESP_LOGI(TAG, "Picture taken from CAMERA #2");
+
         // Release picture to free up memory
         esp_camera_fb_return(pic);
         // Disable CAMERA2 to release IOT channel
         if (ESP_OK != disable_camera()) {
             return;
         }
+
+        //activate_device(DISTANCE1);
+
+        ESP_LOGI(TAG, "Worker Core #%d tick", xPortGetCoreID());
+
+        //vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+extern "C" [[noreturn]] void app_main() {
+    esp_log_level_set(TAG, ESP_LOG_INFO);
+
+    TaskHandle_t core0_task;
+    xTaskCreatePinnedToCore(
+        core1_main,
+        "Collect data from periferias",
+        10000,
+        nullptr,
+        0,
+        &core0_task,
+        1);
+
+    while (true) {
+        //ESP_LOGI("Main", "Core: %d", xPortGetCoreID());
 
         // Write to log
         constexpr size_t BUF_SIZE = 321 * 5;
@@ -265,28 +286,8 @@ void core0_main(void * parameter) {
             pos += snprintf(line + pos, BUF_SIZE - pos, "%04X ", pixel);
         }
         ESP_LOGI("OV7670-2", "%s", line);
-
         free(line);
 
-        ESP_LOGI("Worker", "Core: %d", xPortGetCoreID());
-
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-}
-
-extern "C" [[noreturn]] void app_main() {
-    TaskHandle_t core0_task;
-    xTaskCreatePinnedToCore(
-        core0_main,
-        "Collect data from periferias",
-        10000,
-        nullptr,
-        0,
-        &core0_task,
-        1);
-
-    while (true) {
-        ESP_LOGI("Main", "Core: %d", xPortGetCoreID());
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
