@@ -1,6 +1,4 @@
 #include "config.hpp"
-#include "touch.hpp"
-#include "controller.hpp"
 
 Touch touch;
 Controller controller;

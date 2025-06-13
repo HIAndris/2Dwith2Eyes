@@ -30,7 +30,7 @@ void Status::init() {
 
 void Status::write(uint8_t* data, int length) {
 
-    ESP_LOGI(TAG, "Status color: %x:%x:%x", data[0], data[1], data[2]);
+    ESP_LOGI("STATUS", "New color: %x:%x:%x", data[0], data[1], data[2]);
 
     rmt_item32_t items[24 * LED_NUM];
     int idx = 0;
@@ -44,7 +44,6 @@ void Status::write(uint8_t* data, int length) {
 
     rmt_write_items(RMT_TX_CHANNEL, items, idx, true);
     rmt_wait_tx_done(RMT_TX_CHANNEL, portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(1));
 }
 
 void Status::set_color(led_color_t color) {

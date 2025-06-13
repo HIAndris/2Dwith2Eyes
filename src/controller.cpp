@@ -4,7 +4,6 @@ Controller::Controller() {
     touch_state = OFF;
 }
 
-
 void Controller::touch(touch_type_t touch_type){
     if (touch_state == OFF) {
         touch_state = touch_type;
@@ -17,10 +16,17 @@ touch_type_t Controller::get_touch_type() {
 
 void Controller::main() {
     status.init();
+    drive_motor.init(
+        drive_pins,
+        DRIVE_MIN_START,
+        DRIVE_MIN,
+        DRIVE_ACCEL,
+        123 //ez fasság
+    );
 
     TickType_t action = 0;
+    ESP_LOGI(TAG, "Start loop...");
     while (true) {
-        ESP_LOGI(TAG, "Start loop...");
         switch (touch_state)
         {
         case SHORT:
@@ -43,6 +49,7 @@ void Controller::main() {
         default:
             ESP_LOGI(TAG, "Set color to WHITE");
             status.set_color(WHITE);
+            drive_motor.go(10, DRIVE_MIN_START);
         }
 
         if ((xTaskGetTickCount() - action) > TICKS_S*3) {

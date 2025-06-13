@@ -2,16 +2,24 @@
 #define CONFIG_H
 
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+#include <bitset>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
+#include <esp_camera.h>
 #include <sys/param.h>
-#include <cstring>
 #include <driver/gpio.h>
 #include <driver/rmt.h>
 #include <driver/i2c_master.h>
-#include <esp_camera.h>
 //#include "vl53l0x/vl53l0x.h"
+
+#include "motor.hpp"
+#include "status.hpp"
+#include "touch.hpp"
+#include "controller.hpp"
 
 
 
@@ -58,16 +66,25 @@ constexpr TickType_t TICKS_S     = pdMS_TO_TICKS(1000);
 #define DIST3_SHUT_PIN 21
 
 // drive motor pins
-#define MOTOR1_D0_PIN 1
-#define MOTOR1_D1_PIN 2
-#define MOTOR1_D2_PIN 42
-#define MOTOR1_D3_PIN 41
+const motor_pins_t drive_pins = {
+    GPIO_NUM_1,
+    GPIO_NUM_2,
+    GPIO_NUM_42,
+    GPIO_NUM_41
+};
+#define DRIVE_MIN_START 50000
+#define DRIVE_MIN        5000
+#define DRIVE_ACCEL 0.8
 
 // steering motor pins
-#define MOTOR2_D0_PIN 40
-#define MOTOR2_D1_PIN 39
-#define MOTOR2_D2_PIN 47
-#define MOTOR2_D3_PIN 46
+const motor_pins_t steer_pins = {
+    GPIO_NUM_40,
+    GPIO_NUM_38,
+    GPIO_NUM_47,
+    GPIO_NUM_46
+};
+#define STEER_MIN_START 50000
+#define STEER_MIN        5000
 
 // RGB LED pin
 #define RGB_LED_PIN 48
@@ -77,15 +94,15 @@ constexpr TickType_t TICKS_S     = pdMS_TO_TICKS(1000);
 #define RMT_TX_CHANNEL RMT_CHANNEL_0
 #define LED_NUM 1
 #define RMT_CLK_DIV 2
+#define CLK_TICK_NS 25
 #define T0H_NS  350 // 0 bit HIGH time (ns)
 #define T0L_NS  900 // 0 bit LOW time  (ns)
 #define T1H_NS  900 // 1 bit HIGH time (ns)
 #define T1L_NS  350 // 1 bit LOW time  (ns)
-constexpr uint32_t CLK_TICK_NS = 1000000000UL / CLOCKS_PER_SEC;
 
 // touch sensor configs
-#define TOUCH_PIN 38
-#define GPIO_TOUCH GPIO_NUM_38
+#define TOUCH_PIN 39
+#define GPIO_TOUCH GPIO_NUM_39
 constexpr TickType_t TOUCH_LENGTH_MIN   =  TICKS_100MS ; // minimum ticks for touch to be valid
 constexpr TickType_t TOUCH_LENGTH_SHORT =  TICKS_S     ; // maximum ticks for touch to be short
 constexpr TickType_t TOUCH_LENGTH_LONG  = (TICKS_S * 3); // maximum ticks for touch to be long

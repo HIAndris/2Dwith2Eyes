@@ -4,15 +4,14 @@
 #include "config.hpp"
 
 class Status {
-public:
+  public:
     Status();
 
     void set_color(const led_color_t color);
 
     void init();
 
-private:
-
+  private:
     void write(uint8_t* data, int length = 3);
 
     rmt_item32_t bit0;
