@@ -8,6 +8,7 @@ typedef uint32_t                motor_delay_t; // delay between motor steps in m
 typedef uint32_t                motor_total_t; // cycles needed to complete a 360 degree turn (a cycle is a rotation of bits on the motor pins)
 typedef float                   motor_accel_t; // acceleration rate of the motor (0 < a < 1) (0.1 = rapid acceleration, 0.9 = slow acceleration)
 
+
 class DriveMotor {
   public:
     void init(
@@ -17,7 +18,7 @@ class DriveMotor {
         const motor_accel_t accel_multiplier,
         const motor_total_t cycles_to_360d
     );
-    void go(uint64_t cycles, motor_delay_t delay);
+    void go(uint16_t cycles, motor_delay_t delay);
 
   private:
     motor_pins_t  pins;

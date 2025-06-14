@@ -1,3 +1,8 @@
+#include "motor.hpp"
+#include "status.hpp"
+#include "touch.hpp"
+#include "controller.hpp"
+#include "config.hpp"
 #include "config.hpp"
 
 Touch touch;

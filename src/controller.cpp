@@ -17,7 +17,7 @@ touch_type_t Controller::get_touch_type() {
 void Controller::main() {
     status.init();
     drive_motor.init(
-        drive_pins,
+        steer_pins,
         DRIVE_MIN_START,
         DRIVE_MIN,
         DRIVE_ACCEL,
@@ -49,12 +49,13 @@ void Controller::main() {
         default:
             ESP_LOGI(TAG, "Set color to WHITE");
             status.set_color(WHITE);
-            drive_motor.go(10, DRIVE_MIN_START);
         }
 
         if ((xTaskGetTickCount() - action) > TICKS_S*3) {
             touch_state = OFF;
         }
+
+        drive_motor.go(100, 200000);
 
         ESP_LOGI(TAG, "Wait for 100ms");
         vTaskDelay(TICKS_100MS);

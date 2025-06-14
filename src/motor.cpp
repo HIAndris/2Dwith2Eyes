@@ -23,14 +23,14 @@ void DriveMotor::init(const motor_pins_t& pins, const motor_delay_t min_start_de
             .pin_bit_mask = (1ULL << pin),
             .mode = GPIO_MODE_OUTPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_ENABLE,
             .intr_type = GPIO_INTR_DISABLE
         };
         gpio_config(&io_conf);
     }
 }
 
-void DriveMotor::go(uint64_t cycles, motor_delay_t delay) {
+void DriveMotor::go(uint16_t cycles, motor_delay_t delay) {
     motor_delay_t current;
     if (delay > start) {
         if (delay < top) {
@@ -43,7 +43,7 @@ void DriveMotor::go(uint64_t cycles, motor_delay_t delay) {
         current = delay;
     }
 
-    for (cycles; cycles <= 0; cycles--) {
+    for (; cycles > 0; cycles--) {
         if (current < delay) {
             current = static_cast<motor_delay_t>(current * accel);
             if (current > top) {
@@ -68,14 +68,19 @@ void DriveMotor::cycle(motor_delay_t delay) {
         for (size_t i = 0; i < pins.size(); ++i) {
             gpio_set_level(pins[i], (pattern >> i) & 1);
         };
-        esp_rom_delay_us(delay);
+        esp_rom_delay_us(delay / 2);
+        for (size_t i = 0; i < pins.size(); ++i) {
+            gpio_set_level(pins[i], 0);
+        };
+        esp_rom_delay_us(delay / 2);
 
-        if (cycle < (pins.size() - 1)) {
+        /*if (cycle < (pins.size() - 1)) {
             gpio_set_level(pins[++cycle], 1);
         } else {
             gpio_set_level(pins[0], 1);
         }
-        esp_rom_delay_us(delay);
+        ESP_LOGD("MOTOR", "Wait %lu us", delay);
+        esp_rom_delay_us(delay / 2);*/
     };
 };
 
