@@ -1,8 +1,5 @@
 #include "controller.hpp"
 
-volatile int8_t Controller::speed = 0;
-int64_t Controller::motor_state = 0;
-
 Controller::Controller() {
     touch_state = OFF;
 }
