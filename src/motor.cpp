@@ -1,5 +1,8 @@
 #include "motor.hpp"
 
+volatile int8_t Motor::speed = 0;
+int64_t Motor::motor_state = 0;
+
 // DriveMotor:
 void DriveMotor::init(const motor_pins_t& pins, const motor_delay_t min_start_delay, const motor_delay_t min_delay, const motor_accel_t accel_multiplier, const motor_total_t cycles_to_360d) {
     if (pins.size() > 8) {
@@ -29,57 +32,6 @@ void DriveMotor::init(const motor_pins_t& pins, const motor_delay_t min_start_de
         gpio_config(&io_conf);
     }
 }
-
-void DriveMotor::go(uint16_t cycles, motor_delay_t delay) {
-    motor_delay_t current;
-    if (delay > start) {
-        if (delay < top) {
-            current = start;
-        } else {
-            delay = top;
-            current = start;
-        }
-    } else {
-        current = delay;
-    }
-
-    for (; cycles > 0; cycles--) {
-        if (current < delay) {
-            current = static_cast<motor_delay_t>(current * accel);
-            if (current > top) {
-                current = top;
-            }
-        }
-        cycle(current);
-    }
-};
-
-void DriveMotor::cycle(motor_delay_t delay) {
-    /*
-    for cycle with a turning pattern (0001, 0010 ...etc.) {
-        set the motor gpio pins as the current state of the pattern
-        wait for the next cycle
-        set the next bit high to make a smoother pattern
-        wait for the next cycle
-    }
-    */
-    size_t cycle = 0;
-    for (uint8_t pattern = 1; ((pattern >> (pins.size())) & 1) == 0; pattern <<= 1) {
-        for (size_t i = 0; i < pins.size(); ++i) {
-            gpio_set_level(pins[i], (pattern >> i) & 1);
-        };
-        esp_rom_delay_us(delay);
-        
-        /*
-        if (cycle < (pins.size() - 1)) {
-            gpio_set_level(pins[++cycle], 1);
-        } else {
-            gpio_set_level(pins[0], 1);
-        }
-        esp_rom_delay_us(delay);
-        */
-    };
-};
 
 void DriveMotor::task(void *parameters) {
     const uint8_t full_step_seq[4][4] = {
