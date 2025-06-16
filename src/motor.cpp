@@ -68,19 +68,16 @@ void DriveMotor::cycle(motor_delay_t delay) {
         for (size_t i = 0; i < pins.size(); ++i) {
             gpio_set_level(pins[i], (pattern >> i) & 1);
         };
-        esp_rom_delay_us(delay / 2);
-        for (size_t i = 0; i < pins.size(); ++i) {
-            gpio_set_level(pins[i], 0);
-        };
-        esp_rom_delay_us(delay / 2);
-
-        /*if (cycle < (pins.size() - 1)) {
+        esp_rom_delay_us(delay);
+        
+        /*
+        if (cycle < (pins.size() - 1)) {
             gpio_set_level(pins[++cycle], 1);
         } else {
             gpio_set_level(pins[0], 1);
         }
-        ESP_LOGD("MOTOR", "Wait %lu us", delay);
-        esp_rom_delay_us(delay / 2);*/
+        esp_rom_delay_us(delay);
+        */
     };
 };
 

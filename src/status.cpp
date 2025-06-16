@@ -30,7 +30,7 @@ void Status::init() {
 
 void Status::write(uint8_t* data, int length) {
 
-    ESP_LOGI("STATUS", "New color: %x:%x:%x", data[0], data[1], data[2]);
+    ESP_LOGD("STATUS", "New color: %x:%x:%x", data[0], data[1], data[2]);
 
     rmt_item32_t items[24 * LED_NUM];
     int idx = 0;

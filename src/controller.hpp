@@ -21,10 +21,15 @@ class Controller {
     void main();
   
   private:
+    static volatile int8_t speed;
+    static int64_t motor_state;
+
     Status status;
     touch_type_t touch_state;
 
     DriveMotor drive_motor;
+
+    static void motor_task(void *parameters);
 };
 
 #endif

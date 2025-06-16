@@ -2,11 +2,13 @@
 #define MOTOR_HPP
 
 #include "config.hpp"
+#include <thread>
 
 typedef std::vector<gpio_num_t> motor_pins_t;  // motor GPIO pins in order
 typedef uint32_t                motor_delay_t; // delay between motor steps in microseconds
 typedef uint32_t                motor_total_t; // cycles needed to complete a 360 degree turn (a cycle is a rotation of bits on the motor pins)
 typedef float                   motor_accel_t; // acceleration rate of the motor (0 < a < 1) (0.1 = rapid acceleration, 0.9 = slow acceleration)
+
 
 
 class DriveMotor {

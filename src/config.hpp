@@ -13,6 +13,8 @@
 #include <driver/gpio.h>
 #include <driver/rmt.h>
 #include <driver/i2c_master.h>
+#include <math.h>
+#include <esp_timer.h>
 //#include "vl53l0x/vl53l0x.h"
 
 
@@ -73,9 +75,9 @@ const motor_pins_t drive_pins = {
     GPIO_NUM_42,
     GPIO_NUM_41
 };
-#define DRIVE_MIN_START 50000
-#define DRIVE_MIN        5000
-#define DRIVE_ACCEL 0.8
+#define DRIVE_MIN_START 20000
+#define DRIVE_MIN        4000
+#define DRIVE_ACCEL 0.98
 
 // steering motor pins
 const motor_pins_t steer_pins = {
@@ -107,7 +109,6 @@ const motor_pins_t steer_pins = {
 constexpr TickType_t TOUCH_LENGTH_MIN   =  TICKS_100MS ; // minimum ticks for touch to be valid
 constexpr TickType_t TOUCH_LENGTH_SHORT =  TICKS_S     ; // maximum ticks for touch to be short
 constexpr TickType_t TOUCH_LENGTH_LONG  = (TICKS_S * 3); // maximum ticks for touch to be long
-
 
 
 // RGB LED color map
