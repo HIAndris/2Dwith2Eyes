@@ -24,7 +24,7 @@ void Controller::main() {
         DRIVE_MIN_START,
         DRIVE_MIN,
         DRIVE_ACCEL,
-        123 //ez fasság
+        200
     );
 
     speed = 50;
