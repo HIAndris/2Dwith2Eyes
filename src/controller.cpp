@@ -81,35 +81,3 @@ void Controller::main() {
         vTaskDelay(TICKS_100MS);
     }
 }
-
-void Controller::motor_task(void *parameters) {
-    const uint8_t full_step_seq[4][4] = {
-        {1, 0, 1, 0},
-        {0, 1, 1, 0},
-        {0, 1, 0, 1},
-        {1, 0, 0, 1}
-    };
-
-    while (true) {
-        if (speed > 0) {
-            motor_state++;
-        }
-        if (speed < 0) {
-            motor_state--;
-        }
-        if (speed == 0) {
-            // Stop, release motor
-            for (int pid = 0; pid < 0; pid++) {
-                gpio_set_level(drive_pins[pid], 0);
-            }
-            vTaskDelay(200); // Wait to start
-        } else {
-            // Write next step
-            for (int pid = 0; pid < 4; pid++) {
-                gpio_set_level(drive_pins[pid], full_step_seq[motor_state & 0x03][pid]);
-            }
-            uint32_t delay = abs(1000 / speed) - 5;
-            vTaskDelay(delay);
-        }
-    }
-}
