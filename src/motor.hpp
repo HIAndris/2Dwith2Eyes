@@ -38,15 +38,8 @@ class DriveMotor {
 
 class SteerMotor {
   public:
-    void init(
-        const motor_pins_t& pins
-    );
-    void go();
-
-  private:
-    motor_pins_t pins;
-
-    void cycle(motor_delay_t delay);
+    void init(const motor_pins_t& pins);
+    void task(void *parameters);
 };
 
 #endif
