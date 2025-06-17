@@ -19,24 +19,30 @@ void Controller::main() {
     drive_motor.init(
         drive_pins,
         DRIVE_MIN_START,
-        DRIVE_MIN,
-        DRIVE_ACCEL,
-        200
+        DRIVE_MIN
     );
+    steer_motor.init(
+        steer_pins,
+        STEER_MIN,
+        STEER_CALIBRATE
+    );
+    
 
-    speed = 50;
+    xTaskCreate(DriveMotor::task_entry, "DriveTask", 16384, &drive_motor, 5, nullptr);
+    xTaskCreate(SteerMotor::task_entry, "SteerTask", 16384, &steer_motor, 5, nullptr);
+
+    drive_motor.speed = 50;
     bool speed_change_direction = true;
-
-    xTaskCreate(motor_task, "StepperTask", 16384, this, 5, nullptr);
 
     TickType_t action = 0;
     TickType_t last_speed_change = xTaskGetTickCount();
-    ESP_LOGI(TAG, "Start loop...");
+    status.sse_log("Start loop");
     while (true) {
         switch (touch_state)
         {
         case SHORT:
             ESP_LOGD(TAG, "Set color to GREEN");
+            status.sse_log("Short press");
             status.set_color(GREEN);
             action = xTaskGetTickCount();
             touch_state = BUSY;
@@ -44,6 +50,7 @@ void Controller::main() {
         
         case LONG:
             ESP_LOGD(TAG, "Set color to RED");
+            status.sse_log("Long press");
             status.set_color(RED);
             action = xTaskGetTickCount();
             touch_state = BUSY;
@@ -61,20 +68,10 @@ void Controller::main() {
             touch_state = OFF;
         }
 
-        if (speed_change_direction) {
-            speed++;
-            if (speed == 100) {
-                speed_change_direction = false;
-            }
-        } else {
-            speed--;
-            if (speed == -100) {
-                speed_change_direction = true;
-            }
-        }
-        ESP_LOGI(TAG, "Speed changed to %d", speed);
+        
+        drive_motor.speed = 100;
 
-        ESP_LOGD(TAG, "Wait for 100ms");
+
         vTaskDelay(TICKS_100MS);
     }
 }

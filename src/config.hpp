@@ -5,24 +5,29 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <thread>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
 #include <esp_camera.h>
+#include <esp_timer.h>
+#include <esp_netif.h>
+#include <esp_event.h>
+#include <esp_wifi.h>
+#include <esp_http_server.h>
+#include <lwip/ip4_addr.h>
+#include <nvs_flash.h>
 #include <sys/param.h>
 #include <driver/gpio.h>
 #include <driver/rmt.h>
 #include <driver/i2c_master.h>
 #include <math.h>
-#include <esp_timer.h>
 //#include "vl53l0x/vl53l0x.h"
 
 
 
 typedef std::vector<gpio_num_t> motor_pins_t;  // motor GPIO pins in order
-typedef uint32_t                motor_delay_t; // delay between motor steps in microseconds
-typedef uint32_t                motor_total_t; // cycles needed to complete a 360 degree turn (a cycle is a rotation of bits on the motor pins)
-typedef float                   motor_accel_t; // acceleration rate of the motor (0 < a < 1) (0.1 = rapid acceleration, 0.9 = slow acceleration)
+typedef uint32_t                motor_delay_t; // delay between motor steps in milliseconds
 
 
 
@@ -75,9 +80,8 @@ const motor_pins_t drive_pins = {
     GPIO_NUM_42,
     GPIO_NUM_41
 };
-#define DRIVE_MIN_START 20000
-#define DRIVE_MIN        4000
-#define DRIVE_ACCEL 0.98
+#define DRIVE_MIN_START 20
+#define DRIVE_MIN        2
 
 // steering motor pins
 const motor_pins_t steer_pins = {
@@ -86,8 +90,8 @@ const motor_pins_t steer_pins = {
     GPIO_NUM_47,
     GPIO_NUM_46
 };
-#define STEER_MIN_START 50000
-#define STEER_MIN        5000
+#define STEER_MIN 3
+#define STEER_CALIBRATE GPIO_NUM_45
 
 // RGB LED pin
 #define RGB_LED_PIN 48

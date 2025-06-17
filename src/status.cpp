@@ -26,6 +26,48 @@ void Status::init() {
 
     rmt_config(&config);
     rmt_driver_install(config.channel, 0, 0);
+
+    esp_wifi_stop();
+    esp_wifi_deinit();
+
+    esp_netif_init();
+    esp_event_loop_create_default();
+
+    esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+
+    esp_netif_ip_info_t ip_info;
+    IP4_ADDR(&ip_info.ip, 2, 2, 2, 2);
+    IP4_ADDR(&ip_info.gw, 2, 2, 2, 2);
+    IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+
+    esp_netif_dhcps_stop(ap_netif);
+    esp_netif_set_ip_info(ap_netif, &ip_info);
+    esp_netif_dhcps_start(ap_netif);
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+    esp_wifi_set_mode(WIFI_MODE_AP);
+
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = "2D2EYES_LOG",
+            .password = "idehajdu",
+            .ssid_len = 0,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK,
+            .max_connection = 2
+        },
+    };
+
+    if (strlen((char *)wifi_config.ap.password) == 0) {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
+    esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+    esp_wifi_start();
+
+    ESP_LOGI("SSE_LOG", "SoftAccessPoint initialised: SSID=%s, password=%s, IP=%s", wifi_config.ap.ssid, wifi_config.ap.password, ip4addr_ntoa((const ip4_addr_t *)&ip_info.ip));
+
+    start_webserver();
 }
 
 void Status::write(uint8_t* data, int length) {
@@ -55,4 +97,101 @@ void Status::set_color(led_color_t color) {
     };
 
     write(grb, 3);
+}
+
+static httpd_handle_t server = NULL;
+static httpd_req_t *sse_client = NULL;
+
+void Status::start_webserver() {
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_start(&server, &config);
+
+    httpd_uri_t index_page = {
+        .uri = "/",
+        .method = HTTP_GET,
+        .handler = index_handler
+    };
+
+    httpd_uri_t log_page = {
+        .uri = "/log",
+        .method = HTTP_GET,
+        .handler = log_handler
+    };
+
+    httpd_uri_t log_stream = {
+        .uri = "/logstream",
+        .method = HTTP_GET,
+        .handler = sse_handler
+    };
+
+    httpd_register_uri_handler(server, &index_page);
+    httpd_register_uri_handler(server, &log_page);
+    httpd_register_uri_handler(server, &log_stream);
+}
+
+void Status::sse_log(const char *msg) {
+    if (sse_client) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "data: %s\n\n", msg);
+        httpd_resp_send_chunk(sse_client, buf, strlen(buf));
+    }
+}
+
+esp_err_t Status::log_handler(httpd_req_t *req) {
+    const char* html = R"rawliteral(
+    <html>
+      <head>
+        <style>
+          pre#log {
+            font-size: 16px;
+            white-space: pre-wrap;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>ESP Log</h1>
+        <pre id="log"></pre>
+        <script>
+          const logBox = document.getElementById("log");
+          const es = new EventSource("/logstream");
+          es.onmessage = (e) => {
+            if (e.data.startsWith(':')) return;
+            logBox.textContent += e.data.replace(": keep-alive", "") + "\n";
+          };
+          es.onerror = (e) => {
+            console.error("SSE error", e);
+          };
+        </script>
+      </body>
+    </html>
+    )rawliteral";
+
+    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+esp_err_t Status::sse_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/event-stream");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+    httpd_resp_set_hdr(req, "Connection", "keep-alive");
+
+    sse_client = req;
+
+    while (true) {
+        const char *keep_alive = ": keep-alive\n\n";
+        if (httpd_resp_send_chunk(req, keep_alive, strlen(keep_alive)) != ESP_OK) {
+            break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+
+    sse_client = NULL;
+    return ESP_OK;
+}
+
+esp_err_t Status::index_handler(httpd_req_t *req) {
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "/log");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
 }
