@@ -16,12 +16,13 @@ class Controller {
   public:
     Controller();
 
+    Status status;
+
     void touch(touch_type_t touch_type);
     touch_type_t get_touch_type();
     void main();
   
   private:
-    Status status;
     touch_type_t touch_state;
 
     DriveMotor drive_motor;

@@ -160,6 +160,11 @@ uint32_t SteerMotor::calibrate(gpio_num_t port) {
         vTaskDelay(top*TICKS_MS);
     }
 
+    for (int pid = 0; pid < 0; pid++) {
+        gpio_set_level(pins[pid], 0);
+    }
+    vTaskDelay(top*TICKS_MS);
+
     return tick_count;
 };
 
@@ -180,12 +185,15 @@ void SteerMotor::task() {
             } else {
                 motor_state = 0;
             }
+            real_position++;
+
         } else if (real_position > position) {
             if (motor_state != 0) {
                 motor_state--;
             } else {
                 motor_state = 3;
             }
+            real_position--;
         }
         if (real_position == position) {
             // Stop, release motor

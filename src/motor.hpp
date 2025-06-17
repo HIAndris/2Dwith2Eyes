@@ -10,7 +10,7 @@ typedef int8_t                  motor_speed_t; // motor speed between -100 and 1
 
 class DriveMotor {
   public:
-    volatile int8_t speed;
+    volatile int8_t speed = 0;
     
     void init(
         const motor_pins_t& pins,
@@ -41,7 +41,7 @@ class DriveMotor {
 
 class SteerMotor {
   public:
-    volatile int8_t steer;
+    volatile int8_t steer = 0;
     
     void init(
         const motor_pins_t& pins,

@@ -31,9 +31,6 @@ void Controller::main() {
     xTaskCreate(DriveMotor::task_entry, "DriveTask", 16384, &drive_motor, 5, nullptr);
     xTaskCreate(SteerMotor::task_entry, "SteerTask", 16384, &steer_motor, 5, nullptr);
 
-    drive_motor.speed = 50;
-    bool speed_change_direction = true;
-
     TickType_t action = 0;
     TickType_t last_speed_change = xTaskGetTickCount();
     status.sse_log("Start loop");
@@ -69,7 +66,7 @@ void Controller::main() {
         }
 
         
-        drive_motor.speed = 100;
+        steer_motor.steer = 68;
 
 
         vTaskDelay(TICKS_100MS);
