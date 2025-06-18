@@ -5,6 +5,7 @@
 #include "config.hpp"
 #include "config.hpp"
 
+Status status;
 Touch touch;
 Controller controller;
 

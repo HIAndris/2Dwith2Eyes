@@ -9,7 +9,7 @@ class Status {
 
     void init();
     void set_color(const led_color_t color);
-    static void sse_log(const char *msg);
+    static void sse_log(const char *fmt, ...);
     static esp_err_t sse_handler(httpd_req_t *req);
     static esp_err_t index_handler(httpd_req_t *req);
     static esp_err_t log_handler(httpd_req_t *req);

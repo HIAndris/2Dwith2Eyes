@@ -129,11 +129,18 @@ void Status::start_webserver() {
     httpd_register_uri_handler(server, &log_stream);
 }
 
-void Status::sse_log(const char *msg) {
+void Status::sse_log(const char *fmt, ...) {
     if (sse_client) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "data: %s\n\n", msg);
-        httpd_resp_send_chunk(sse_client, buf, strlen(buf));
+        char msgbuf[256];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
+        va_end(args);
+
+        char outbuf[300];
+        snprintf(outbuf, sizeof(outbuf), "data: %s\n\n", msgbuf);
+
+        httpd_resp_send_chunk(sse_client, outbuf, strlen(outbuf));
     }
 }
 

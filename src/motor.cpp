@@ -207,6 +207,7 @@ void SteerMotor::task() {
             gpio_set_level(pins[pid], step_seq[motor_state][pid]);
             }
 
+            status.sse_log("Real pos: %lli, Motor state: %u", real_position, motor_state);
             vTaskDelay(top*TICKS_MS);
         }
     }

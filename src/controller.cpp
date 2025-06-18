@@ -16,6 +16,7 @@ touch_type_t Controller::get_touch_type() {
 
 void Controller::main() {
     status.init();
+
     drive_motor.init(
         drive_pins,
         DRIVE_MIN_START,
@@ -32,7 +33,6 @@ void Controller::main() {
     xTaskCreate(SteerMotor::task_entry, "SteerTask", 16384, &steer_motor, 5, nullptr);
 
     TickType_t action = 0;
-    TickType_t last_speed_change = xTaskGetTickCount();
     status.sse_log("Start loop");
     while (true) {
         switch (touch_state)
@@ -66,7 +66,7 @@ void Controller::main() {
         }
 
         
-        steer_motor.steer = 68;
+        steer_motor.steer = 62;
 
 
         vTaskDelay(TICKS_100MS);

@@ -12,11 +12,11 @@ typedef enum {
     BUSY
 } touch_type_t;
 
+extern Status status;
+
 class Controller {
   public:
     Controller();
-
-    Status status;
 
     void touch(touch_type_t touch_type);
     touch_type_t get_touch_type();
