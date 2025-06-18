@@ -15,7 +15,7 @@ touch_type_t Controller::get_touch_type() {
 };
 
 void Controller::main() {
-    status.init();
+    //status.init();
 
     drive_motor.init(
         drive_pins,
@@ -33,22 +33,21 @@ void Controller::main() {
     xTaskCreate(SteerMotor::task_entry, "SteerTask", 16384, &steer_motor, 5, nullptr);
 
     TickType_t action = 0;
-    status.sse_log("Start loop");
     while (true) {
         switch (touch_state)
         {
         case SHORT:
             ESP_LOGD(TAG, "Set color to GREEN");
-            status.sse_log("Short press");
-            status.set_color(GREEN);
+            //status.sse_log("Short press");
+            //status.set_color(GREEN);
             action = xTaskGetTickCount();
             touch_state = BUSY;
             break;
         
         case LONG:
             ESP_LOGD(TAG, "Set color to RED");
-            status.sse_log("Long press");
-            status.set_color(RED);
+            //status.sse_log("Long press");
+            //status.set_color(RED);
             action = xTaskGetTickCount();
             touch_state = BUSY;
             break;
@@ -58,7 +57,7 @@ void Controller::main() {
 
         default:
             ESP_LOGD(TAG, "Set color to WHITE");
-            status.set_color(WHITE);
+            //status.set_color(WHITE);
         }
 
         if ((xTaskGetTickCount() - action) > TICKS_S*3) {

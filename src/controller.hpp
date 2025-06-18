@@ -2,7 +2,7 @@
 #define CONTROLLER_HPP
 
 #include "config.hpp"
-#include "status.hpp"
+//#include "status.hpp"
 #include "motor.hpp"
 
 typedef enum {
@@ -12,7 +12,7 @@ typedef enum {
     BUSY
 } touch_type_t;
 
-extern Status status;
+//extern Status status;
 
 class Controller {
   public:

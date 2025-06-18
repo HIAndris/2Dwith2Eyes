@@ -1,11 +1,11 @@
 #include "motor.hpp"
-#include "status.hpp"
+//#include "status.hpp"  A controller.hpp és controller.cpp-be is ki van kommentezve!
 #include "touch.hpp"
 #include "controller.hpp"
 #include "config.hpp"
 #include "config.hpp"
 
-Status status;
+//Status status;  Ez is!
 Touch touch;
 Controller controller;
 

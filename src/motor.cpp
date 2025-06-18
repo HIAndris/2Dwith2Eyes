@@ -106,6 +106,7 @@ void SteerMotor::init(const motor_pins_t& pins, const motor_delay_t min_delay, c
     gpio_config(&steer_border_config);
     
     steer_border = calibrate(calibrate_pin);
+    ESP_LOGI("STEER-MOTOR", "Calibrated! Steer border: %li", steer_border);
 };
 
 uint32_t SteerMotor::calibrate(gpio_num_t port) {
@@ -178,7 +179,7 @@ void SteerMotor::task() {
             steer_now = -100;
         }
 
-        int64_t position = abs(steer_now/100)*steer_border;
+        int64_t position = (int64_t)(std::abs((double)steer_now / 100.0) * steer_border);
         if (real_position < position) {
             if (motor_state != 3) {
                 motor_state++;
@@ -196,18 +197,19 @@ void SteerMotor::task() {
             real_position--;
         }
         if (real_position == position) {
+            ESP_LOGI("STEER-MOTOR", "Waiting... real_pos=%lli, pos=%lli", real_position, position);
             // Stop, release motor
-            for (int pid = 0; pid < 0; pid++) {
+            for (int pid = 0; pid < 4; pid++) {
                 gpio_set_level(pins[pid], 0);
             }
             vTaskDelay(200*TICKS_MS); // Wait to start
         } else {
+            ESP_LOGI("STEER-MOTOR", "Next step...");
             // Write next step
             for (int pid = 0; pid < 4; pid++) {
-            gpio_set_level(pins[pid], step_seq[motor_state][pid]);
+                gpio_set_level(pins[pid], step_seq[motor_state][pid]);
             }
 
-            status.sse_log("Real pos: %lli, Motor state: %u", real_position, motor_state);
             vTaskDelay(top*TICKS_MS);
         }
     }

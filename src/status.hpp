@@ -1,6 +1,12 @@
 #ifndef STATUS_HPP
 #define STATUS_HPP
 
+#include <esp_netif.h>
+#include <esp_event.h>
+#include <esp_wifi.h>
+#include <esp_http_server.h>
+#include <lwip/ip4_addr.h>
+
 #include "config.hpp"
 
 class Status {
