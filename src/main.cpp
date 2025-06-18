@@ -2,12 +2,14 @@
 //#include "status.hpp"  A controller.hpp és controller.cpp-be is ki van kommentezve!
 #include "touch.hpp"
 #include "controller.hpp"
+#include "collector.hpp"
 #include "config.hpp"
 #include "config.hpp"
 
-//Status status;  Ez is!
+//Status status;  Ezt is!
 Touch touch;
 Controller controller;
+Collector collector;
 
 extern "C" void app_main() {
     esp_log_level_set(TAG, ESP_LOG_INFO);
@@ -21,24 +23,24 @@ extern "C" void app_main() {
     }
     ESP_ERROR_CHECK(ret);
 
-    // controller loop
+    // controller loop on core 0
     controller.main();
 
-    return;
-}
-
-
-    /*
+    // collector loop on core 1
     TaskHandle_t core1_task;
     xTaskCreatePinnedToCore(
-        collector,
+        Collector::main,
         "Collect data from periferias",
         10000,
         nullptr,
         0,
         &core1_task,
-        1);
-    */
+        1
+    );
+
+    return;
+};
+
 
         //ESP_LOGI("Main", "Core: %d", xPortGetCoreID());
         /*

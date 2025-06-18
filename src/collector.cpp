@@ -1,5 +1,14 @@
 #include "collector.hpp"
 
+void Collector::init() {
+    
+};
+
+void Collector::main(void* pvParameters) {
+
+};
+
+/*
 void Collector::disable_others(const serial_io_devices_t selector) {
     for (const serial_io_devices_t device : DEVICES) {
         if (device != selector) {
@@ -123,3 +132,4 @@ void Collector::loop(void * parameter) {
         //vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
+*/
