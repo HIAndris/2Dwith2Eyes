@@ -1,7 +1,7 @@
-#include "config.hpp"
-
 #ifndef COLLECTOR_HPP
 #define COLLECTOR_HPP
+
+#include "config.hpp"
 
 typedef enum {
     DISTANCE1 = DIST1_SHUT_PIN,
@@ -13,9 +13,9 @@ class Collector {
   public:
     void init();
     static void main(void* pvParameters);
+
   private:
-
-
+    
 };
 
 /*

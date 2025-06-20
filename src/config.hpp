@@ -17,7 +17,10 @@
 #include <driver/rmt.h>
 #include <driver/i2c_master.h>
 #include <math.h>
-//#include "vl53l0x/vl53l0x.h"
+
+extern "C" {
+    #include <VL53L0X.h>
+}
 
 
 
