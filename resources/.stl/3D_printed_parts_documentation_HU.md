@@ -106,7 +106,7 @@
 
 ### kormanymu_fogaslec_2.stl
 - Az objektum hosszúsága 89mm-re változott, illetve a **"Lego Technic Gear Rack 1x4"**-es rész meghosszabbodott.
-- A *Lego Axle* lyukak területén az objektum vastagsága le lett csökkentve megközelítőleg 3.44mm-re, a **"Lego Technic Teeth Gear"**-re való **szoros kapcsolat érdekében**.
+- A *Lego Axle* lyukak területén az objektum vastagsága le lett csökkentve megközelítőleg 3.44mm-re, a **"Lego Technic Teeth Gear 20 ooth double bevel"**-re való **szoros kapcsolat érdekében**.
 
 
 ### kormanytengely.stl
