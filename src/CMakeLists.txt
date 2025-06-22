@@ -1,4 +1,4 @@
-FILE(GLOB_RECURSE app_sources 
+file(GLOB_RECURSE app_sources 
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../resources/*.cpp"
 )

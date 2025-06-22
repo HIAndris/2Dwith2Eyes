@@ -6,7 +6,9 @@
 #include "config.hpp"
 #include "config.hpp"
 
-//Status status;  Ezt is!
+portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+
+//Status status;  Ez is!
 Touch touch;
 Controller controller;
 Collector collector;
@@ -15,6 +17,7 @@ extern "C" void app_main() {
     esp_log_level_set(TAG, ESP_LOG_INFO);
 
     touch.init(&controller);
+    collector.init();
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -22,9 +25,6 @@ extern "C" void app_main() {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-
-    // controller loop on core 0
-    controller.main();
 
     // collector loop on core 1
     TaskHandle_t core1_task;
@@ -37,6 +37,9 @@ extern "C" void app_main() {
         &core1_task,
         1
     );
+
+    // controller loop on core 0
+    controller.main();
 
     return;
 };

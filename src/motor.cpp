@@ -1,7 +1,7 @@
 #include "motor.hpp"
 
 // DriveMotor:
-void DriveMotor::init(const motor_pins_t& pins, const motor_delay_t min_start_delay, const motor_delay_t min_delay) {
+void DriveMotor::init(const pins_t& pins, const motor_delay_t min_start_delay, const motor_delay_t min_delay) {
     if (pins.size() != 4) {
         ESP_LOGE("MOTOR", "Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.", pins.size());
         std::abort();
@@ -75,7 +75,7 @@ void DriveMotor::task() {
 }
 
 // SteerMotor:    
-void SteerMotor::init(const motor_pins_t& pins, const motor_delay_t min_delay, const gpio_num_t calibrate_pin) {
+void SteerMotor::init(const pins_t& pins, const motor_delay_t min_delay, const gpio_num_t calibrate_pin) {
     if (pins.size() != 4) {
         ESP_LOGE("MOTOR", "Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.", pins.size());
         std::abort();
@@ -106,7 +106,7 @@ void SteerMotor::init(const motor_pins_t& pins, const motor_delay_t min_delay, c
     gpio_config(&steer_border_config);
     
     steer_border = calibrate(calibrate_pin);
-    ESP_LOGI("STEER-MOTOR", "Calibrated! Steer border: %li", steer_border);
+    ESP_LOGI("STEER-MOTOR", "Calibration successful: Steer border: %li", steer_border);
 };
 
 uint32_t SteerMotor::calibrate(gpio_num_t port) {
@@ -197,14 +197,12 @@ void SteerMotor::task() {
             real_position--;
         }
         if (real_position == position) {
-            ESP_LOGI("STEER-MOTOR", "Waiting... real_pos=%lli, pos=%lli", real_position, position);
             // Stop, release motor
             for (int pid = 0; pid < 4; pid++) {
                 gpio_set_level(pins[pid], 0);
             }
             vTaskDelay(200*TICKS_MS); // Wait to start
         } else {
-            ESP_LOGI("STEER-MOTOR", "Next step...");
             // Write next step
             for (int pid = 0; pid < 4; pid++) {
                 gpio_set_level(pins[pid], step_seq[motor_state][pid]);

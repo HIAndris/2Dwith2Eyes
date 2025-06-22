@@ -1,52 +1,65 @@
 #include "collector.hpp"
 
-#define COLLECTOR_TAG "Collector"
+#define COLLECTOR_TAG "COLLECTOR"
 
-static volatile uint16_t distance_data[3];
-static volatile float gyro_data[3]; // x, y, z
+VL53L0X Collector::vldist(I2C_PORT);
+
+volatile uint16_t Collector::distance_data[3] = {966, 696, 669};
+volatile float Collector::gyro_data[3] = {0, 0, 0};
 
 void Collector::init() {
-    // Inicializálás, ha kell bármi hardver setup
     ESP_LOGI(COLLECTOR_TAG, "Initializing sensors...");
 
-    gpio_set_direction((gpio_num_t)DIST1_SHUT_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)DIST2_SHUT_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction((gpio_num_t)DIST3_SHUT_PIN, GPIO_MODE_OUTPUT);
-
-    // Sensor init pl. VL53L0X és MPU6050 esetén
-    // TODO: inicializáld szenzoraidat itt
+    for (gpio_num_t pin : distance_shut_pins) {
+        gpio_set_direction(pin, GPIO_MODE_OUTPUT);
+    }
+    
+    Collector::vldist = VL53L0X(I2C_PORT);
+    vldist.i2cMasterInit(SDA_PIN, SCL_PIN);
+    if (!vldist.init()) {
+        ESP_LOGE(TAG, "Failed to initialize VL53L0X");
+        std::abort();
+    }
 }
 
 void Collector::main(void* pvParameters) {
-    ESP_LOGI(COLLECTOR_TAG, "Collector task started");
-
     while (true) {
-        // Távolságmérők leolvasása
-        distance_data[0] = read_distance_sensor(DISTANCE1);
-        distance_data[1] = read_distance_sensor(DISTANCE2);
-        distance_data[2] = read_distance_sensor(DISTANCE3);
+        for (uint8_t i = 0; i < distance_shut_pins.size(); i++) {
+            uint16_t dist = read_distance_sensor(distance_shut_pins[i]);
+            portENTER_CRITICAL(&mux);
+            distance_data[i] = dist;
+            portEXIT_CRITICAL(&mux);
+        }
+        read_gyro_sensor(gyro_data);
 
-        // Giroszkóp adatok olvasása
-        read_gyro_sensor(gyro_data); // gyro_data = [x, y, z]
-
-        // LOG (tesztelésre)
-        ESP_LOGI(COLLECTOR_TAG, "Distances: %u %u %u | Gyro: %.2f %.2f %.2f",
-                 distance_data[0], distance_data[1], distance_data[2],
-                 gyro_data[0], gyro_data[1], gyro_data[2]);
-
-        // Időzítés
         vTaskDelay(TICKS_10MS);
     }
 }
 
-// Dummy szenzor lekérdezők
-uint16_t read_distance_sensor(dist_sensors_t sensor) {
-    // TODO: implementáld a megfelelő VL53L0X driverrel
-    return 123; // teszt adat
+uint16_t Collector::read_distance_sensor(gpio_num_t sensor_shut) {
+    for (gpio_num_t pin : distance_shut_pins) {
+        if (pin == sensor_shut) {
+            gpio_set_level(pin, 1);
+            ESP_LOGI(COLLECTOR_TAG, "Distance pin %d set to HIGH", pin);
+        } else {
+            gpio_set_level(pin, 0);
+            ESP_LOGI(COLLECTOR_TAG, "Distance pin %d set to LOW", pin);
+        }
+    }
+
+    vTaskDelay(TICKS_5MS);
+
+    uint16_t result_mm;
+    if (vldist.read(&result_mm)) {
+        ESP_LOGE(COLLECTOR_TAG, "Successfully read VL53L0X pin %d (%u)", sensor_shut, result_mm);
+        return result_mm;
+    } else {
+        ESP_LOGE(COLLECTOR_TAG, "Failed to read VL53L0X pin %d", sensor_shut);
+        return 55555;
+    }
 }
 
-void read_gyro_sensor(volatile float* data_out) {
-    // TODO: implementáld az MPU6050 vagy egyéb giroszkóp olvasását
+void Collector::read_gyro_sensor(volatile float* data_out) {
     data_out[0] = 0.0f;
     data_out[1] = 0.0f;
     data_out[2] = 0.0f;

@@ -19,24 +19,29 @@
 #include <math.h>
 
 extern "C" {
-    #include <VL53L0X.h>
+    #include "VL53L0X.h"
 }
 
 
-
-typedef std::vector<gpio_num_t> motor_pins_t;  // motor GPIO pins in order
+typedef std::vector<gpio_num_t> pins_t;  // GPIO pins in order
 typedef uint32_t                motor_delay_t; // delay between motor steps in milliseconds
 
-
+extern portMUX_TYPE mux;
 
 // title
 #define TAG "2Dwith2Eyes"
 
 // times in ticks
 constexpr TickType_t TICKS_MS    = pdMS_TO_TICKS(   1);
+constexpr TickType_t TICKS_5MS   = pdMS_TO_TICKS(   5);
 constexpr TickType_t TICKS_10MS  = pdMS_TO_TICKS(  10);
 constexpr TickType_t TICKS_100MS = pdMS_TO_TICKS( 100);
 constexpr TickType_t TICKS_S     = pdMS_TO_TICKS(1000);
+
+// I2C pins
+#define I2C_PORT I2C_NUM_0
+#define SDA_PIN GPIO_NUM_10
+#define SCL_PIN GPIO_NUM_9
 
 // camera-1 pins
 #define CAM1_PIN_PWDN 3
@@ -63,16 +68,16 @@ constexpr TickType_t TICKS_S     = pdMS_TO_TICKS(1000);
 #define CAM_PIN_HREF 12
 #define CAM_PIN_PCLK 13
 
-// gyro sensor pin
+// gyro sensor pins
 #define GYRO_CHANNEL 0x68
 
 // distance sensor pins
-#define DIST1_SHUT_PIN 19
-#define DIST2_SHUT_PIN 20
-#define DIST3_SHUT_PIN 21
+#define DIST1_SHUT_PIN GPIO_NUM_19
+#define DIST2_SHUT_PIN GPIO_NUM_20
+#define DIST3_SHUT_PIN GPIO_NUM_21
 
 // drive motor pins
-const motor_pins_t drive_pins = {
+const pins_t drive_pins = {
     GPIO_NUM_1,
     GPIO_NUM_2,
     GPIO_NUM_42,
@@ -82,7 +87,7 @@ const motor_pins_t drive_pins = {
 #define DRIVE_MIN        2
 
 // steering motor pins
-const motor_pins_t steer_pins = {
+const pins_t steer_pins = {
     GPIO_NUM_38,
     GPIO_NUM_40,
     GPIO_NUM_47,

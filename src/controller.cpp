@@ -14,6 +14,15 @@ touch_type_t Controller::get_touch_type() {
     return touch_state;
 };
 
+uint16_t Controller::get_distance(uint8_t sensor_num) {
+    uint16_t dist;
+    portENTER_CRITICAL(&mux);
+    dist = collector.distance_data[sensor_num];
+    portEXIT_CRITICAL(&mux);
+
+    return dist;
+};
+
 void Controller::main() {
     //status.init();
 
@@ -65,8 +74,8 @@ void Controller::main() {
         }
 
         
-        steer_motor.steer = 62;
-
+        steer_motor.steer = 20;
+        ESP_LOGI(TAG, "distance: 1=%u, 2=%u, 3=%u", get_distance(0), get_distance(1), get_distance(2));
 
         vTaskDelay(TICKS_100MS);
     }

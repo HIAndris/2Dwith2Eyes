@@ -3,6 +3,7 @@
 
 #include "config.hpp"
 //#include "status.hpp"
+#include "collector.hpp"
 #include "motor.hpp"
 
 typedef enum {
@@ -13,6 +14,7 @@ typedef enum {
 } touch_type_t;
 
 //extern Status status;
+extern Collector collector;
 
 class Controller {
   public:
@@ -27,6 +29,8 @@ class Controller {
 
     DriveMotor drive_motor;
     SteerMotor steer_motor;
+
+    uint16_t get_distance(uint8_t sensor_num);
 };
 
 #endif

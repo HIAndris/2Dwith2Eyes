@@ -3,19 +3,25 @@
 
 #include "config.hpp"
 
-typedef enum {
-    DISTANCE1 = DIST1_SHUT_PIN,
-    DISTANCE2 = DIST2_SHUT_PIN,
-    DISTANCE3 = DIST3_SHUT_PIN
-} dist_sensors_t;
+const pins_t distance_shut_pins = {
+    DIST1_SHUT_PIN,
+    DIST2_SHUT_PIN,
+    DIST3_SHUT_PIN
+};
 
 class Collector {
   public:
+    static volatile uint16_t distance_data[3];
+    static volatile float gyro_data[3];
+
     void init();
     static void main(void* pvParameters);
 
   private:
-    
+    static VL53L0X vldist;
+
+    static uint16_t read_distance_sensor(gpio_num_t sensor_shut);
+    static void read_gyro_sensor(volatile float* data_out);
 };
 
 /*
