@@ -27,11 +27,11 @@ void Status::init() {
     rmt_config(&config);
     rmt_driver_install(config.channel, 0, 0);
 
-    esp_wifi_stop();
-    esp_wifi_deinit();
-
     esp_netif_init();
-    esp_event_loop_create_default();
+    esp_err_t err = esp_event_loop_create_default();
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+        ESP_LOGE("WiFi", "Failed to create default event loop: %s", esp_err_to_name(err));
+    }
 
     esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
 
@@ -48,15 +48,12 @@ void Status::init() {
     esp_wifi_init(&cfg);
     esp_wifi_set_mode(WIFI_MODE_AP);
 
-    wifi_config_t wifi_config = {
-        .ap = {
-            .ssid = "2D2EYES_LOG",
-            .password = "idehajdu",
-            .ssid_len = 0,
-            .authmode = WIFI_AUTH_WPA_WPA2_PSK,
-            .max_connection = 2
-        },
-    };
+    wifi_config_t wifi_config = {};
+    strncpy((char*)wifi_config.ap.ssid, "2D2EYES_LOG", sizeof(wifi_config.ap.ssid));
+    strncpy((char*)wifi_config.ap.password, "idehajdu", sizeof(wifi_config.ap.password));
+    wifi_config.ap.ssid_len = 0;
+    wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+    wifi_config.ap.max_connection = 2;
 
     if (strlen((char *)wifi_config.ap.password) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;

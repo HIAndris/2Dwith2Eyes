@@ -2,60 +2,75 @@
 
 #define COLLECTOR_TAG "COLLECTOR"
 
-VL53L0X Collector::vldist(I2C_PORT);
-
 volatile uint16_t Collector::distance_data[3] = {966, 696, 669};
 volatile float Collector::gyro_data[3] = {0, 0, 0};
 
+Adafruit_VL53L0X lox1 = Adafruit_VL53L0X();
+Adafruit_VL53L0X lox2 = Adafruit_VL53L0X();
+Adafruit_VL53L0X lox3 = Adafruit_VL53L0X();
+
+std::array<SensorInfo, 3> Collector::dist_sensors = {{
+    { &lox1, 0x2a, DIST1_SHUT_PIN, 'L' },
+    { &lox2, 0x2b, DIST2_SHUT_PIN, 'R' },
+    { &lox3, 0x2c, DIST3_SHUT_PIN, 'F' }
+}};
+
 void Collector::init() {
-    ESP_LOGI(COLLECTOR_TAG, "Initializing sensors...");
+    Wire.begin(10, 9);
 
-    for (gpio_num_t pin : distance_shut_pins) {
-        gpio_set_direction(pin, GPIO_MODE_OUTPUT);
+    for (auto& dist_sensor : dist_sensors) {
+        pinMode(dist_sensor.shut_pin, OUTPUT);
+        digitalWrite(dist_sensor.shut_pin, LOW);
     }
-    
-    Collector::vldist = VL53L0X(I2C_PORT);
-    vldist.i2cMasterInit(SDA_PIN, SCL_PIN);
-    if (!vldist.init()) {
-        ESP_LOGE(TAG, "Failed to initialize VL53L0X");
-        std::abort();
+    vTaskDelay(TICKS_100MS);
+
+    for (auto& dist_sensor : dist_sensors) {
+        digitalWrite(dist_sensor.shut_pin, HIGH);
+        vTaskDelay(TICKS_100MS);
+
+        ESP_LOGI(COLLECTOR_TAG, "Adafruit VL53L0X test with address: %d", dist_sensor.i2c_addr);
+        if (!dist_sensor.sensor->begin(dist_sensor.i2c_addr)) {
+            ESP_LOGE(COLLECTOR_TAG, "Failed to start sensor with address: %d", dist_sensor.i2c_addr);
+            while (1);
+        }
     }
+
+    for (auto& dist_sensor : dist_sensors) {
+        dist_sensor.sensor->startRangeContinuous();
+    }
+
+    ESP_LOGI(COLLECTOR_TAG, "All sensors initialized!");
 }
 
-void Collector::main(void* pvParameters) {
+void Collector::main() {
+    for (uint8_t sensor_index = 0; sensor_index < dist_sensors.size(); sensor_index++) {
+        uint8_t* i = new uint8_t(sensor_index);
+        xTaskCreatePinnedToCore(
+            Collector::distance_task,
+            "DistanceSensor",
+            1024,
+            i,
+            2,
+            NULL,
+            1
+        );
+    }
+    ESP_LOGI(COLLECTOR_TAG, "All sensors started measuring!");
+}
+
+void Collector::distance_task(void* pvParameters) {
+    uint8_t sensor_index = *(uint8_t*)pvParameters;
+    delete (uint8_t*)pvParameters;
+    read_distance_sensor(sensor_index);
+    vTaskDelete(NULL);
+}
+
+void Collector::read_distance_sensor(uint8_t sensor_index) {
     while (true) {
-        for (uint8_t i = 0; i < distance_shut_pins.size(); i++) {
-            uint16_t dist = read_distance_sensor(distance_shut_pins[i]);
-            portENTER_CRITICAL(&mux);
-            distance_data[i] = dist;
-            portEXIT_CRITICAL(&mux);
-        }
-        read_gyro_sensor(gyro_data);
-
-        vTaskDelay(TICKS_10MS);
-    }
-}
-
-uint16_t Collector::read_distance_sensor(gpio_num_t sensor_shut) {
-    for (gpio_num_t pin : distance_shut_pins) {
-        if (pin == sensor_shut) {
-            gpio_set_level(pin, 1);
-            ESP_LOGI(COLLECTOR_TAG, "Distance pin %d set to HIGH", pin);
-        } else {
-            gpio_set_level(pin, 0);
-            ESP_LOGI(COLLECTOR_TAG, "Distance pin %d set to LOW", pin);
-        }
-    }
-
-    vTaskDelay(TICKS_5MS);
-
-    uint16_t result_mm;
-    if (vldist.read(&result_mm)) {
-        ESP_LOGE(COLLECTOR_TAG, "Successfully read VL53L0X pin %d (%u)", sensor_shut, result_mm);
-        return result_mm;
-    } else {
-        ESP_LOGE(COLLECTOR_TAG, "Failed to read VL53L0X pin %d", sensor_shut);
-        return 55555;
+        portENTER_CRITICAL(&mux);
+        distance_data[sensor_index] = dist_sensors[sensor_index].sensor->readRange();
+        portEXIT_CRITICAL(&mux);
+        vTaskDelay(DIST_DELAY_TICKS);
     }
 }
 

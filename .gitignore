@@ -16,3 +16,10 @@ cmake-build-*/
 # OS-specific
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Others
+*.log
+*.bak
+*.swp
+*.orig

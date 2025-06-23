@@ -3,10 +3,11 @@
 
 #include "config.hpp"
 
-const pins_t distance_shut_pins = {
-    DIST1_SHUT_PIN,
-    DIST2_SHUT_PIN,
-    DIST3_SHUT_PIN
+struct SensorInfo {
+  Adafruit_VL53L0X* sensor;
+  uint8_t i2c_addr;
+  uint8_t shut_pin;
+  char name;
 };
 
 class Collector {
@@ -15,12 +16,13 @@ class Collector {
     static volatile float gyro_data[3];
 
     void init();
-    static void main(void* pvParameters);
+    static void main();
 
   private:
-    static VL53L0X vldist;
+    static std::array<SensorInfo, 3> dist_sensors;
 
-    static uint16_t read_distance_sensor(gpio_num_t sensor_shut);
+    static void distance_task(void* pvParameters);
+    static void read_distance_sensor(uint8_t sensor_index);
     static void read_gyro_sensor(volatile float* data_out);
 };
 

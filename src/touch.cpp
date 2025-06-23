@@ -24,11 +24,11 @@ void IRAM_ATTR Touch::handler(void* arg) {
         uint16_t delta = xTaskGetTickCountFromISR() - press_tick;
 
         if (delta < TOUCH_LENGTH_MIN || delta > TOUCH_LENGTH_LONG) {
-            // do nothing
+            // invalid touch
         } else if (delta < TOUCH_LENGTH_SHORT) {
-            controller->touch(SHORT);
+            controller->touch(TCH_SHORT);
         } else {
-            controller->touch(LONG);
+            controller->touch(TCH_LONG);
         }
     } else {
         press_tick = xTaskGetTickCountFromISR();

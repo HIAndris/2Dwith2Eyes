@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <vector>
+#include <array>
 #include <thread>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -15,16 +15,12 @@
 #include <sys/param.h>
 #include <driver/gpio.h>
 #include <driver/rmt.h>
-#include <driver/i2c_master.h>
+#include <Wire.h>
 #include <math.h>
-
-extern "C" {
-    #include "VL53L0X.h"
-}
+#include <Adafruit_VL53L0X.h>
 
 
-typedef std::vector<gpio_num_t> pins_t;  // GPIO pins in order
-typedef uint32_t                motor_delay_t; // delay between motor steps in milliseconds
+typedef std::array<gpio_num_t, 4> pins_t;  // GPIO pins in order
 
 extern portMUX_TYPE mux;
 
@@ -74,8 +70,8 @@ constexpr TickType_t TICKS_S     = pdMS_TO_TICKS(1000);
 // distance sensor pins
 #define DIST1_SHUT_PIN GPIO_NUM_19
 #define DIST2_SHUT_PIN GPIO_NUM_20
-#define DIST3_SHUT_PIN GPIO_NUM_21
-
+#define DIST3_SHUT_PIN GPIO_NUM_38
+constexpr TickType_t DIST_DELAY_TICKS = TICKS_10MS;
 // drive motor pins
 const pins_t drive_pins = {
     GPIO_NUM_1,

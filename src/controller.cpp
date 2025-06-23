@@ -1,11 +1,11 @@
 #include "controller.hpp"
 
 Controller::Controller() {
-    touch_state = OFF;
+    touch_state = TCH_READY;
 }
 
 void Controller::touch(touch_type_t touch_type){
-    if (touch_state == OFF) {
+    if (touch_state == TCH_READY) {
         touch_state = touch_type;
     }
 };
@@ -45,23 +45,23 @@ void Controller::main() {
     while (true) {
         switch (touch_state)
         {
-        case SHORT:
+        case TCH_SHORT:
             ESP_LOGD(TAG, "Set color to GREEN");
             //status.sse_log("Short press");
             //status.set_color(GREEN);
             action = xTaskGetTickCount();
-            touch_state = BUSY;
+            touch_state = TCH_BUSY;
             break;
         
-        case LONG:
+        case TCH_LONG:
             ESP_LOGD(TAG, "Set color to RED");
             //status.sse_log("Long press");
             //status.set_color(RED);
             action = xTaskGetTickCount();
-            touch_state = BUSY;
+            touch_state = TCH_BUSY;
             break;
         
-        case BUSY:
+        case TCH_BUSY:
             break;
 
         default:
@@ -70,7 +70,7 @@ void Controller::main() {
         }
 
         if ((xTaskGetTickCount() - action) > TICKS_S*3) {
-            touch_state = OFF;
+            touch_state = TCH_READY;
         }
 
         

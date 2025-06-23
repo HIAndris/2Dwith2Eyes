@@ -7,10 +7,10 @@
 #include "motor.hpp"
 
 typedef enum {
-    OFF,
-    SHORT,
-    LONG,
-    BUSY
+    TCH_READY,
+    TCH_SHORT,
+    TCH_LONG,
+    TCH_BUSY
 } touch_type_t;
 
 //extern Status status;
