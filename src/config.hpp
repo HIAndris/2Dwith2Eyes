@@ -24,6 +24,7 @@
 typedef std::array<gpio_num_t, 4> pins_t;  // GPIO pins in order
 
 extern portMUX_TYPE mux;
+extern SemaphoreHandle_t distance_mutex;
 
 struct SensorInfo {
     Adafruit_VL53L0X* sensor;
@@ -36,13 +37,13 @@ struct SensorInfo {
 #define TAG "2Dwith2Eyes: "
 
 // times in ticks
-constexpr TickType_t TICKS_MS    = pdMS_TO_TICKS(1);
-constexpr TickType_t TICKS_5MS   = TICKS_MS    * 5;
-constexpr TickType_t TICKS_10MS  = TICKS_5MS   * 2;
-constexpr TickType_t TICKS_50MS  = TICKS_10MS  * 5;
-constexpr TickType_t TICKS_100MS = TICKS_50MS  * 2;
-constexpr TickType_t TICKS_500MS = TICKS_100MS * 5;
-constexpr TickType_t TICKS_S     = TICKS_500MS * 2;
+constexpr TickType_t TICKS_MS    = pdMS_TO_TICKS(1); // 1 millisecond
+constexpr TickType_t TICKS_5MS   = TICKS_MS    * 5 ; // 5 milliseconds
+constexpr TickType_t TICKS_10MS  = TICKS_5MS   * 2 ; // 10 milliseconds
+constexpr TickType_t TICKS_50MS  = TICKS_10MS  * 5 ; // 50 milliseconds
+constexpr TickType_t TICKS_100MS = TICKS_50MS  * 2 ; // 100 milliseconds
+constexpr TickType_t TICKS_500MS = TICKS_100MS * 5 ; // 500 milliseconds
+constexpr TickType_t TICKS_S     = TICKS_500MS * 2 ; // 1 second
 
 // I2C pins
 #define SDA_PIN GPIO_NUM_10
@@ -77,9 +78,9 @@ constexpr TickType_t TICKS_S     = TICKS_500MS * 2;
 #define GYRO_CHANNEL 0x68
 
 // distance sensor pins
-#define DIST1_SHUT_PIN GPIO_NUM_20
+#define DIST1_SHUT_PIN GPIO_NUM_21
 #define DIST2_SHUT_PIN GPIO_NUM_19
-#define DIST3_SHUT_PIN GPIO_NUM_21
+#define DIST3_SHUT_PIN GPIO_NUM_20
 constexpr TickType_t DIST_DELAY_TICKS = TICKS_10MS;
 
 // distance sensor definitions
@@ -88,9 +89,9 @@ static Adafruit_VL53L0X lox2;
 static Adafruit_VL53L0X lox3;
 
 static std::array<SensorInfo, 3> dist_sensors = {{
-    { &lox1, 0x30, DIST1_SHUT_PIN, 'L' },
+    { &lox1, 0x30, DIST1_SHUT_PIN, 'F' },
     { &lox2, 0x31, DIST2_SHUT_PIN, 'R' },
-    { &lox3, 0x32, DIST3_SHUT_PIN, 'F' }
+    { &lox3, 0x32, DIST3_SHUT_PIN, 'L' }
 }};
 
 // drive motor pins

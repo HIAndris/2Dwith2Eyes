@@ -5,7 +5,7 @@
 
 class Collector {
   public:
-    static volatile uint16_t distance_data[3];
+    static volatile uint16_t distances[3];
     static volatile float gyro_data[3];
 
     void init();

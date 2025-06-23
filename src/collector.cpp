@@ -2,7 +2,7 @@
 
 #define COLLECTOR_TAG "COLLECTOR"
 
-volatile uint16_t Collector::distance_data[3] = {966, 696, 669};
+volatile uint16_t Collector::distances[3] = {966, 696, 669};
 volatile float Collector::gyro_data[3] = {0, 0, 0};
 
 void Collector::init() {
@@ -56,9 +56,10 @@ void Collector::read_distance_sensor(uint8_t sensor_index) {
     while (true) {
         if (dist_sensors[sensor_index].sensor->isRangeComplete()) {
             dist = dist_sensors[sensor_index].sensor->readRange();
-            portENTER_CRITICAL(&mux);
-            distance_data[sensor_index] = dist;
-            portEXIT_CRITICAL(&mux);
+            if (xSemaphoreTake(distance_mutex, portMAX_DELAY)) {
+                distances[sensor_index] = dist;
+                xSemaphoreGive(distance_mutex);
+            }
         }
         vTaskDelay(DIST_DELAY_TICKS);
     }

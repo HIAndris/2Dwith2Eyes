@@ -3,10 +3,10 @@
 // DriveMotor:
 void DriveMotor::init(const pins_t& pins, const motor_delay_t min_start_delay, const motor_delay_t min_delay) {
     if (pins.size() != 4) {
-        Serial.printf("MOTOR", "Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.\n", pins.size());
+        Serial.printf("Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.\n", pins.size());
         std::abort();
     } else if (min_start_delay < min_delay) {
-        Serial.printf("MOTOR", "Minimum start delay (%lu) is shorter than minimum delay (%lu)!\n", min_start_delay, min_delay);
+        Serial.printf("Minimum start delay (%lu) is shorter than minimum delay (%lu)!\n", min_start_delay, min_delay);
         std::abort();
     }
 
@@ -26,6 +26,7 @@ void DriveMotor::init(const pins_t& pins, const motor_delay_t min_start_delay, c
         };
         gpio_config(&io_conf);
     }
+    Serial.printf("Drive pin config successful!\n");
 }
 
 void DriveMotor::task() {
@@ -77,7 +78,7 @@ void DriveMotor::task() {
 // SteerMotor:    
 void SteerMotor::init(const pins_t& pins, const motor_delay_t min_delay, const gpio_num_t calibrate_pin) {
     if (pins.size() != 4) {
-        Serial.printf("MOTOR", "Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.\n", pins.size());
+        Serial.printf("Wrong amount of GPIO pins provided (%zu)! Must be exactly 4.\n", pins.size());
         std::abort();
     }
      this->pins = pins;
@@ -105,8 +106,9 @@ void SteerMotor::init(const pins_t& pins, const motor_delay_t min_delay, const g
     };
     gpio_config(&steer_border_config);
     
+    Serial.printf("Steer pin config successful! Calibrating...\n");
     steer_border = calibrate(calibrate_pin);
-    Serial.printf("STEER-MOTOR", "Calibration successful: Steer border: %li\n", steer_border);
+    Serial.printf("Calibration successful: Steer border: %li\n", steer_border);
 };
 
 uint32_t SteerMotor::calibrate(gpio_num_t port) {

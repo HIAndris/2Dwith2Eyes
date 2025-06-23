@@ -7,6 +7,7 @@
 #include "config.hpp"
 
 portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+SemaphoreHandle_t distance_mutex;
 
 //Status status;  Ez is!
 Touch touch;
@@ -14,6 +15,8 @@ Controller controller;
 Collector collector;
 
 void setup() {
+    distance_mutex = xSemaphoreCreateMutex();
+
     Serial.begin(115200);
     while (! Serial) {
         delay(1);

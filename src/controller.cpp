@@ -16,9 +16,11 @@ touch_type_t Controller::get_touch_type() {
 
 uint16_t Controller::get_distance(uint8_t sensor_num) {
     uint16_t dist;
-    portENTER_CRITICAL(&mux);
-    dist = collector.distance_data[sensor_num];
-    portEXIT_CRITICAL(&mux);
+    if (xSemaphoreTake(distance_mutex, portMAX_DELAY)) {
+        dist = collector.distances[sensor_num];
+        xSemaphoreGive(distance_mutex);
+    }
+    Serial.printf("Distance #%u: %u\n", sensor_num, dist);
 
     return dist;
 };
@@ -72,12 +74,13 @@ void Controller::main() {
             touch_state = TCH_READY;
         }
         
-        drive_motor.speed = 50;
-        while (get_distance(0) < 250 && get_distance(1) < 250) {
-            vTaskDelay(TICKS_10MS);
+        steer_motor.steer = 0;
+        drive_motor.speed = 60;
+        while (get_distance(2) > 250 || get_distance(1) > 250) {
+            vTaskDelay(TICKS_50MS);
         }
         steer_motor.steer = 100;
+        drive_motor.speed = 30;
         vTaskDelay(TICKS_S);
-        steer_motor.steer = 0;
     }
 }
