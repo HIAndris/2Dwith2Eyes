@@ -43,19 +43,18 @@ void Controller::main() {
 
     TickType_t action = 0;
     while (true) {
-        switch (touch_state)
-        {
+        switch (touch_state) {
         case TCH_SHORT:
-            ESP_LOGD(TAG, "Set color to GREEN");
-            //status.sse_log("Short press");
+            Serial.printf("Set color to GREEN\n");
+            //status.sse_log("Short press\n");
             //status.set_color(GREEN);
             action = xTaskGetTickCount();
             touch_state = TCH_BUSY;
             break;
         
         case TCH_LONG:
-            ESP_LOGD(TAG, "Set color to RED");
-            //status.sse_log("Long press");
+            Serial.printf("Set color to RED\n");
+            //status.sse_log("Long press\n");
             //status.set_color(RED);
             action = xTaskGetTickCount();
             touch_state = TCH_BUSY;
@@ -65,18 +64,20 @@ void Controller::main() {
             break;
 
         default:
-            ESP_LOGD(TAG, "Set color to WHITE");
             //status.set_color(WHITE);
+            break;
         }
 
         if ((xTaskGetTickCount() - action) > TICKS_S*3) {
             touch_state = TCH_READY;
         }
-
         
-        steer_motor.steer = 20;
-        ESP_LOGI(TAG, "distance: 1=%u, 2=%u, 3=%u", get_distance(0), get_distance(1), get_distance(2));
-
-        vTaskDelay(TICKS_100MS);
+        drive_motor.speed = 50;
+        while (get_distance(0) < 250 && get_distance(1) < 250) {
+            vTaskDelay(TICKS_10MS);
+        }
+        steer_motor.steer = 100;
+        vTaskDelay(TICKS_S);
+        steer_motor.steer = 0;
     }
 }

@@ -3,13 +3,6 @@
 
 #include "config.hpp"
 
-struct SensorInfo {
-  Adafruit_VL53L0X* sensor;
-  uint8_t i2c_addr;
-  uint8_t shut_pin;
-  char name;
-};
-
 class Collector {
   public:
     static volatile uint16_t distance_data[3];
@@ -19,8 +12,6 @@ class Collector {
     static void main();
 
   private:
-    static std::array<SensorInfo, 3> dist_sensors;
-
     static void distance_task(void* pvParameters);
     static void read_distance_sensor(uint8_t sensor_index);
     static void read_gyro_sensor(volatile float* data_out);

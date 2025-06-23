@@ -5,41 +5,27 @@
 volatile uint16_t Collector::distance_data[3] = {966, 696, 669};
 volatile float Collector::gyro_data[3] = {0, 0, 0};
 
-Adafruit_VL53L0X lox1 = Adafruit_VL53L0X();
-Adafruit_VL53L0X lox2 = Adafruit_VL53L0X();
-Adafruit_VL53L0X lox3 = Adafruit_VL53L0X();
-
-std::array<SensorInfo, 3> Collector::dist_sensors = {{
-    { &lox1, 0x2a, DIST1_SHUT_PIN, 'L' },
-    { &lox2, 0x2b, DIST2_SHUT_PIN, 'R' },
-    { &lox3, 0x2c, DIST3_SHUT_PIN, 'F' }
-}};
-
 void Collector::init() {
-    Wire.begin(10, 9);
-
     for (auto& dist_sensor : dist_sensors) {
         pinMode(dist_sensor.shut_pin, OUTPUT);
         digitalWrite(dist_sensor.shut_pin, LOW);
     }
-    vTaskDelay(TICKS_100MS);
+    vTaskDelay(TICKS_50MS);
 
     for (auto& dist_sensor : dist_sensors) {
         digitalWrite(dist_sensor.shut_pin, HIGH);
-        vTaskDelay(TICKS_100MS);
+        vTaskDelay(TICKS_50MS);
 
-        ESP_LOGI(COLLECTOR_TAG, "Adafruit VL53L0X test with address: %d", dist_sensor.i2c_addr);
-        if (!dist_sensor.sensor->begin(dist_sensor.i2c_addr)) {
-            ESP_LOGE(COLLECTOR_TAG, "Failed to start sensor with address: %d", dist_sensor.i2c_addr);
-            while (1);
+        Serial.printf("Adafruit VL53L0X setup with I2C address: %X\n", dist_sensor.i2c_addr);
+        if (!dist_sensor.sensor->begin(0x29)) {
+            Serial.printf("Failed to start sensor with I2C address: %X\n", dist_sensor.i2c_addr);
+        } else {
+            dist_sensor.sensor->setAddress(dist_sensor.i2c_addr);
+            dist_sensor.sensor->startRangeContinuous();
         }
     }
 
-    for (auto& dist_sensor : dist_sensors) {
-        dist_sensor.sensor->startRangeContinuous();
-    }
-
-    ESP_LOGI(COLLECTOR_TAG, "All sensors initialized!");
+    Serial.printf("Sensors initialized!\n");
 }
 
 void Collector::main() {
@@ -48,14 +34,14 @@ void Collector::main() {
         xTaskCreatePinnedToCore(
             Collector::distance_task,
             "DistanceSensor",
-            1024,
+            8192,
             i,
             2,
             NULL,
             1
         );
     }
-    ESP_LOGI(COLLECTOR_TAG, "All sensors started measuring!");
+    Serial.printf("Measurements started!\n");
 }
 
 void Collector::distance_task(void* pvParameters) {
@@ -66,10 +52,14 @@ void Collector::distance_task(void* pvParameters) {
 }
 
 void Collector::read_distance_sensor(uint8_t sensor_index) {
+    uint16_t dist;
     while (true) {
-        portENTER_CRITICAL(&mux);
-        distance_data[sensor_index] = dist_sensors[sensor_index].sensor->readRange();
-        portEXIT_CRITICAL(&mux);
+        if (dist_sensors[sensor_index].sensor->isRangeComplete()) {
+            dist = dist_sensors[sensor_index].sensor->readRange();
+            portENTER_CRITICAL(&mux);
+            distance_data[sensor_index] = dist;
+            portEXIT_CRITICAL(&mux);
+        }
         vTaskDelay(DIST_DELAY_TICKS);
     }
 }
@@ -85,7 +75,7 @@ void Collector::read_gyro_sensor(volatile float* data_out) {
 void Collector::disable_others(const serial_io_devices_t selector) {
     for (const serial_io_devices_t device : DEVICES) {
         if (device != selector) {
-            ESP_LOGI(TAG, "Disable device %d", device);
+            Serial.printf("Disable device %d\n", device);
             gpio_set_direction(static_cast<gpio_num_t>(selector), GPIO_MODE_OUTPUT);
             gpio_set_pull_mode(static_cast<gpio_num_t>(selector), GPIO_FLOATING);
             gpio_set_level(static_cast<gpio_num_t>(selector), 1);
@@ -95,7 +85,7 @@ void Collector::disable_others(const serial_io_devices_t selector) {
 
 void Collector::activate_device(const serial_io_devices_t selector) {
     disable_others(selector);
-    ESP_LOGI(TAG, "Enable device %d", selector);
+    Serial.printf("Enable device %d\n", selector);
     gpio_set_direction(static_cast<gpio_num_t>(selector), GPIO_MODE_OUTPUT);
     gpio_set_pull_mode(static_cast<gpio_num_t>(selector), GPIO_FLOATING);
     gpio_set_level(static_cast<gpio_num_t>(selector), 0);
@@ -103,19 +93,19 @@ void Collector::activate_device(const serial_io_devices_t selector) {
 
 esp_err_t Collector::init_camera(const serial_io_devices_t selector) {
     disable_others(selector);
-    ESP_LOGI(TAG, "Initialize camera device %d", selector);
+    Serial.printf("Initialize camera device %d\n", selector);
     gpio_reset_pin(static_cast<gpio_num_t>(selector));
     if (const esp_err_t err = esp_camera_init(selector == CAMERA1 ? &camera1_config : &camera2_config); err != ESP_OK) {
-        ESP_LOGE(TAG, "Camera Init Failed");
+        Serial.printf("Camera Init Failed\n");
         return err;
     }
     return ESP_OK;
 }
 
 esp_err_t Collector::disable_camera() {
-    ESP_LOGI(TAG, "Deinitialize camera device");
+    Serial.printf("Deinitialize camera device\n");
     if (const esp_err_t err = esp_camera_deinit(); err != ESP_OK) {
-        ESP_LOGE(TAG, "Disable Camera Failed");
+        Serial.printf("Disable Camera Failed\n");
         return err;
     }
     return ESP_OK;
@@ -147,10 +137,10 @@ void Collector::update_camera_row(const camera_fb_t* pic, uint16_t row_buffer[])
 }
 
 void Collector::loop(void * parameter) {
-    ESP_LOGI(TAG, "Starting Core #%d worker...", xPortGetCoreID());
+    Serial.printf("Starting Core #%d worker...\n", xPortGetCoreID());
 
     while (true) {
-        ESP_LOGI(TAG, "Init CAMERA #1 and take picture...");
+        Serial.printf("Init CAMERA #1 and take picture...\n");
 
         gpio_set_direction(GPIO_CAM2_PWDN, GPIO_MODE_OUTPUT);
         //gpio_set_pull_mode(GPIO_CAM2_PWDN, GPIO_FLOATING);
@@ -162,7 +152,7 @@ void Collector::loop(void * parameter) {
         // Get picture from CAMERA1
         camera_fb_t* pic = esp_camera_fb_get();
 
-        ESP_LOGI(TAG, "Picture taken from CAMERA #1");
+        Serial.printf("Picture taken from CAMERA #1\n");
 
         // 320*240*2 bytes; we average pixels horizontally
         //update_camera_row(pic, camera_1_row);
@@ -174,7 +164,7 @@ void Collector::loop(void * parameter) {
             return;
         }
 
-        ESP_LOGI(TAG, "Init CAMERA #2 and take picture...");
+        Serial.printf("Init CAMERA #2 and take picture...\n");
 
         gpio_set_direction(GPIO_CAM1_PWDN, GPIO_MODE_OUTPUT);
         //gpio_set_pull_mode(GPIO_CAM1_PWDN, GPIO_FLOATING);
@@ -189,7 +179,7 @@ void Collector::loop(void * parameter) {
         // 320*240*2 bytes; we average pixels horizontally
         //update_camera_row(pic, camera_2_row);
 
-        ESP_LOGI(TAG, "Picture taken from CAMERA #2");
+        Serial.printf("Picture taken from CAMERA #2\n");
 
         // Release picture to free up memory
         esp_camera_fb_return(pic);
@@ -200,7 +190,7 @@ void Collector::loop(void * parameter) {
 
         //activate_device(DISTANCE1);
 
-        ESP_LOGI(TAG, "Worker Core #%d tick", xPortGetCoreID());
+        Serial.printf("Worker Core #%d tick\n", xPortGetCoreID());
 
         //vTaskDelay(100 / portTICK_PERIOD_MS);
     }

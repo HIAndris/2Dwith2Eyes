@@ -30,7 +30,7 @@ void Status::init() {
     esp_netif_init();
     esp_err_t err = esp_event_loop_create_default();
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
-        ESP_LOGE("WiFi", "Failed to create default event loop: %s", esp_err_to_name(err));
+        Serial.printf("WiFi", "Failed to create default event loop: %s\n", esp_err_to_name(err));
     }
 
     esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
@@ -62,15 +62,12 @@ void Status::init() {
     esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
     esp_wifi_start();
 
-    ESP_LOGI("SSE_LOG", "SoftAccessPoint initialised: SSID=%s, password=%s, IP=%s", wifi_config.ap.ssid, wifi_config.ap.password, ip4addr_ntoa((const ip4_addr_t *)&ip_info.ip));
+    Serial.printf("SSE_LOG", "SoftAccessPoint initialised: SSID=%s, password=%s, IP=%s\n", wifi_config.ap.ssid, wifi_config.ap.password, ip4addr_ntoa((const ip4_addr_t *)&ip_info.ip));
 
     start_webserver();
 }
 
 void Status::write(uint8_t* data, int length) {
-
-    ESP_LOGD("STATUS", "New color: %x:%x:%x", data[0], data[1], data[2]);
-
     rmt_item32_t items[24 * LED_NUM];
     int idx = 0;
 
@@ -156,8 +153,8 @@ esp_err_t Status::log_handler(httpd_req_t *req) {
         <h1>ESP Log</h1>
         <pre id="log"></pre>
         <script>
-          const logBox = document.getElementById("log");
-          const es = new EventSource("/logstream");
+          const logBox = document.getElementById("log\n");
+          const es = new EventSource("/logstream\n");
           es.onmessage = (e) => {
             if (e.data.startsWith(':')) return;
             logBox.textContent += e.data.replace(": keep-alive", "") + "\n";
@@ -175,9 +172,9 @@ esp_err_t Status::log_handler(httpd_req_t *req) {
 }
 
 esp_err_t Status::sse_handler(httpd_req_t *req) {
-    httpd_resp_set_type(req, "text/event-stream");
-    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
-    httpd_resp_set_hdr(req, "Connection", "keep-alive");
+    httpd_resp_set_type(req, "text/event-stream\n");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache\n");
+    httpd_resp_set_hdr(req, "Connection", "keep-alive\n");
 
     sse_client = req;
 
@@ -194,8 +191,8 @@ esp_err_t Status::sse_handler(httpd_req_t *req) {
 }
 
 esp_err_t Status::index_handler(httpd_req_t *req) {
-    httpd_resp_set_status(req, "302 Found");
-    httpd_resp_set_hdr(req, "Location", "/log");
+    httpd_resp_set_status(req, "302 Found\n");
+    httpd_resp_set_hdr(req, "Location", "/log\n");
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
